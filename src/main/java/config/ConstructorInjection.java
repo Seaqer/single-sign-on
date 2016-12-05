@@ -1,5 +1,4 @@
 package config;
-
 import interfaces.repository.OperationRepository;
 import interfaces.repository.RoleRepository;
 import interfaces.repository.UserRepository;
