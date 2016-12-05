@@ -50,5 +50,11 @@
             <version>1.4.2.RELEASE</version>
         </dependency>
 
+        <dependency>
+            <groupId>ru.sbt</groupId>
+            <artifactId>core</artifactId>
+            <version>1.0</version>
+        </dependency>
+
     </dependencies>
 </project>
