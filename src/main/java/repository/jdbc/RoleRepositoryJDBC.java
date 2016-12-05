@@ -6,6 +6,7 @@ import core.domain.authorization.User;
 import exceptions.SSOException;
 import interfaces.repository.RoleRepository;
 import models.RoleInfo;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +17,7 @@ import java.util.List;
 @Component
 public class RoleRepositoryJDBC implements RoleRepository {
     private final Connection connection;
-    //final static Log LOGGER = LogFactory.getLog(RoleRepositoryJDBC.class);
+    private static final Logger LOGGER = Logger.getLogger(RoleRepositoryJDBC.class);
 
     @Autowired
     public RoleRepositoryJDBC(Connection connection) {
@@ -25,6 +26,7 @@ public class RoleRepositoryJDBC implements RoleRepository {
 
     @Override
     public Role addElement(Role element) throws SSOException {
+
         String query = "INSERT INTO ROLES(ROLE_ID, ROLE_NAME) VALUES(ROLE_SEQ.NEXTVAL, ? )";
 
         try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
@@ -37,17 +39,23 @@ public class RoleRepositoryJDBC implements RoleRepository {
                         element.setROLE_ID(id);
                         return element;
                     } else {
-                        //LOGGER.warn("Unable to get user id");
+                        LOGGER.trace("RoleRepositoryJDBC:addElement не удалось получить id");
                         throw new SSOException("ошибка получения роли");
                     }
                 }
             } else {
-                //LOGGER.warn("User not created");
+                LOGGER.trace("RoleRepositoryJDBC:addElement роль не создана");
                 throw new SSOException("роль не создана");
             }
         } catch (SQLException e) {
-            //LOGGER.debug("RoleRepositoryJDBC:addElement",e);
-            throw e.getErrorCode() == 23505 ? new SSOException("роль уже существует", e) : new SSOException("ошибка сервиса регистрации", e);
+
+            if (e.getErrorCode() == 23505) {
+                LOGGER.trace("RoleRepositoryJDBC:addElement роль уже создана");
+                throw new SSOException("роль уже существует", e);
+            } else {
+                LOGGER.error("RoleRepositoryJDBC:addElement", e);
+                throw new SSOException("ошибка сервиса регистрации", e);
+            }
         }
     }
 
@@ -61,7 +69,7 @@ public class RoleRepositoryJDBC implements RoleRepository {
 
             result = statement.executeUpdate();
         } catch (SQLException e) {
-            //LOGGER.debug("RoleRepositoryJDBC:updateElement",e);
+            LOGGER.error("RoleRepositoryJDBC:updateElement", e);
             throw new SSOException("ошибка сервиса регистрации", e);
         }
         return result;
@@ -75,7 +83,7 @@ public class RoleRepositoryJDBC implements RoleRepository {
             preparedStatement.setLong(1, element.getROLE_ID());
             result = preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            //LOGGER.debug("RoleRepositoryJDBC:deleteElement",e);
+            LOGGER.error("RoleRepositoryJDBC:deleteElement", e);
             throw new SSOException("ошибка сервиса регистрации", e);
         }
         return result;
@@ -97,7 +105,7 @@ public class RoleRepositoryJDBC implements RoleRepository {
                 users.add(role);
             }
         } catch (SQLException e) {
-            //LOGGER.debug("RoleRepositoryJDBC:getElements",e);
+            LOGGER.error("RoleRepositoryJDBC:getElements", e);
             users.clear();
             throw new SSOException("ошибка сервиса регистрации", e);
         }
@@ -111,10 +119,16 @@ public class RoleRepositoryJDBC implements RoleRepository {
         try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             statement.setLong(1, role.getROLE_ID());
             statement.setLong(1, user.getUSER_ID());
-            return  statement.executeUpdate() == 1;
+            return statement.executeUpdate() == 1;
         } catch (SQLException e) {
-            //LOGGER.debug("RoleRepositoryJDBC:giveUserRole",e);
-            throw e.getErrorCode() == 23505 ? new SSOException("роль уже ввыдана", e) : new SSOException("ошибка сервиса регистрации", e);
+
+            if (e.getErrorCode() == 23505) {
+                LOGGER.trace("RoleRepositoryJDBC:giveUserRole роль уже ввыдана");
+                throw new SSOException("роль уже ввыдана", e);
+            } else {
+                LOGGER.error("RoleRepositoryJDBC:giveUserRole", e);
+                throw new SSOException("ошибка сервиса регистрации", e);
+            }
         }
     }
 }

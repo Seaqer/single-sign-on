@@ -7,20 +7,19 @@ import interfaces.repository.UserRepository;
 import interfaces.service.PasswordManager;
 import interfaces.service.UserValidator;
 import models.UserInfo;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Objects;
-//import org.apache.commons.logging.Log;
-//import org.apache.commons.logging.LogFactory;
 
 @Component
 public class UserService {
     private final PasswordManager passwordManager;
     private final UserValidator userValidator;
     private final UserRepository userRepository;
-    //final static Log LOGGER = LogFactory.getLog(UserService.class);
+    private static final Logger LOGGER = Logger.getLogger(UserService.class);
 
     @Autowired
     public UserService(PasswordManager passwordManager, UserValidator userValidator, UserRepository userRepository) {
@@ -43,6 +42,7 @@ public class UserService {
         User user = searchUser(login);
         user.setLogin(newLogin);
         if (userRepository.updateElement(user) != 1) {
+            LOGGER.trace("UserService:updateLogin Пользователя не существует");
             throw new SSOException("Пользователя не существует");
         }
         return true;
@@ -54,6 +54,7 @@ public class UserService {
         User user = searchUser(login);
         user.setPasswd(passwordManager.getPassword(newPassword));
         if (userRepository.updateElement(user) != 1) {
+            LOGGER.trace("UserService:closeUser Пользователя не существует");
             throw new SSOException("Пользователя не существует");
         }
         return true;
@@ -62,10 +63,12 @@ public class UserService {
     public boolean openUser(String login) throws SSOException {
         User user = searchUser(login);
         if (Objects.isNull(user.getDEL_USER())) {
+            LOGGER.trace("UserService:closeUser Пользователя не заблокирован");
             throw new SSOException("Пользователь не заблокирован");
         } else {
             user.setDEL_USER(null);
             if (userRepository.updateElement(user) != 1) {
+                LOGGER.trace("UserService:closeUser Пользователя не существует");
                 throw new SSOException("Пользователя не существует");
             }
 
@@ -77,11 +80,13 @@ public class UserService {
         User user = searchUser(login);
 
         if (!Objects.isNull(user.getDEL_USER())){
+            LOGGER.trace("UserService:closeUser Пользователя уже заблокирован");
             throw new SSOException("Пользователь уже заблокирован");
         }else {
             User del_user = searchUser(del_user_login);
             user.setDEL_USER(del_user.getUSER_ID());
             if (userRepository.updateElement(user) != 1) {
+                LOGGER.trace("UserService:closeUser Пользователя не существует");
                 throw new SSOException("Пользователя не существует");
             }
         }
@@ -96,6 +101,7 @@ public class UserService {
 
         List<User> users = userRepository.getElements(user);
         if (users.size() != 1) {
+            LOGGER.trace("UserService:searchUser Пользователя не существует");
             throw new SSOException("Пользователя не существует");
         }
         return users.get(0);
@@ -108,6 +114,7 @@ public class UserService {
             case 0:
                 return false;
             default:
+                LOGGER.trace("UserService:updateLogin invalid number of operations");
                 throw new SSOException("UserService:hasPremission() - invalid number of operations");
 
         }

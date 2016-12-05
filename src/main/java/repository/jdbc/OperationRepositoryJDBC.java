@@ -6,6 +6,7 @@ import core.domain.authorization.Role;
 import exceptions.SSOException;
 import interfaces.repository.OperationRepository;
 import models.OperationInfo;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +17,7 @@ import java.util.List;
 @Component
 public class OperationRepositoryJDBC implements OperationRepository {
     private final Connection connection;
-    //final static Log LOGGER = LogFactory.getLog(RoleRepositoryJDBC.class);
+    private static final Logger LOGGER = Logger.getLogger(OperationRepositoryJDBC.class);
 
     @Autowired
     public OperationRepositoryJDBC(Connection connection) {
@@ -37,17 +38,22 @@ public class OperationRepositoryJDBC implements OperationRepository {
                         element.setOPER_ID(id);
                         return element;
                     } else {
-                        //LOGGER.warn("Unable to get user id");
+                        LOGGER.trace("OperationRepositoryJDBC:addElement не удалось получить id");
                         throw new SSOException("ошибка получения операции");
                     }
                 }
             } else {
-                //LOGGER.warn("User not created");
+                LOGGER.trace("OperationRepositoryJDBC:addElement операция не создана");
                 throw new SSOException("операция не создана");
             }
         } catch (SQLException e) {
-            //LOGGER.debug("OperationRepositoryJDBC:addElement",e);
-            throw e.getErrorCode() == 23505 ? new SSOException("операция уже существует", e) : new SSOException("ошибка сервиса регистрации", e);
+            if (e.getErrorCode() == 23505) {
+                LOGGER.debug("UserRepositoryJDBC:addElement операция уже существует");
+                throw new SSOException("операция уже существует", e);
+            } else {
+                LOGGER.error("UserRepositoryJDBC:addElement", e);
+                throw new SSOException("ошибка сервиса регистрации", e);
+            }
         }
     }
 
@@ -61,7 +67,7 @@ public class OperationRepositoryJDBC implements OperationRepository {
 
             result = statement.executeUpdate();
         } catch (SQLException e) {
-            //LOGGER.debug("OperationRepositoryJDBC:updateElement",e);
+            LOGGER.error("UserRepositoryJDBC:updateElement", e);
             throw new SSOException("ошибка сервиса регистрации", e);
         }
         return result;
@@ -75,7 +81,7 @@ public class OperationRepositoryJDBC implements OperationRepository {
             preparedStatement.setLong(1, element.getOPER_ID());
             result = preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            //LOGGER.debug("OperationRepositoryJDBC:deleteElement",e);
+            LOGGER.error("UserRepositoryJDBC:deleteElement", e);
             throw new SSOException("ошибка сервиса регистрации", e);
         }
         return result;
@@ -97,7 +103,7 @@ public class OperationRepositoryJDBC implements OperationRepository {
                 users.add(role);
             }
         } catch (SQLException e) {
-            //LOGGER.debug("OperationRepositoryJDBC:getElements",e);
+            LOGGER.error("UserRepositoryJDBC:getElements", e);
             users.clear();
             throw new SSOException("ошибка сервиса регистрации", e);
         }
@@ -111,10 +117,15 @@ public class OperationRepositoryJDBC implements OperationRepository {
         try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             statement.setLong(1, role.getROLE_ID());
             statement.setLong(1, operation.getOPER_ID());
-            return  statement.executeUpdate() == 1;
+            return statement.executeUpdate() == 1;
         } catch (SQLException e) {
-            //LOGGER.debug("OperationRepositoryJDBC:giveRoleOperation",e);
-            throw e.getErrorCode() == 23505 ? new SSOException("роль уже ввыдана", e) : new SSOException("ошибка сервиса регистрации", e);
+            if (e.getErrorCode() == 23505) {
+                LOGGER.trace("OperationRepositoryJDBC:giveRoleOperation роль уже ввыдана");
+                throw new SSOException("роль уже ввыдана", e);
+            } else {
+                LOGGER.error("UserRepositoryJDBC:getElements", e);
+                throw new SSOException("ошибка сервиса регистрации", e);
+            }
         }
     }
 }

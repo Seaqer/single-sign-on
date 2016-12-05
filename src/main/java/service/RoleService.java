@@ -7,19 +7,19 @@ import exceptions.SSOException;
 import interfaces.repository.RoleRepository;
 import interfaces.service.Validator;
 import models.RoleInfo;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-//import org.apache.commons.logging.Log;
-//import org.apache.commons.logging.LogFactory;
 
 @Component
 public class RoleService {
     private final RoleRepository roleRepository;
     private final UserService userService;
     private final Validator validator;
-    //final static Log LOGGER = LogFactory.getLog(RoleService.class);
+    private static final Logger LOGGER = Logger.getLogger(RoleService.class);
+
 
     @Autowired
     public RoleService(UserService userService, RoleRepository roleRepository, Validator validator) {
@@ -43,6 +43,7 @@ public class RoleService {
         Role role = searchRole(nameRole);
         role.setROLE_NAME(newNameRole);
         if (roleRepository.updateElement(role) != 1) {
+            LOGGER.trace("UserService:searchUser Роли не существует");
             throw new SSOException("Роли не существует");
         }
         return true;
@@ -51,6 +52,7 @@ public class RoleService {
     public boolean deleteRole(String nameRole) throws SSOException {
         Role role = searchRole(nameRole);
         if (roleRepository.deleteElement(role) != 1) {
+            LOGGER.trace("UserService:searchUser Роли не существует");
             throw new SSOException("Роли не существует");
         }
         return true;
@@ -64,6 +66,7 @@ public class RoleService {
 
         List<Role> users = roleRepository.getElements(role);
         if (users.size() != 1) {
+            LOGGER.trace("UserService:searchUser Роли не существует");
             throw new SSOException("Роли не существует");
         }
         return users.get(0);

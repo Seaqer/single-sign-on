@@ -6,19 +6,18 @@ import exceptions.SSOException;
 import interfaces.repository.OperationRepository;
 import interfaces.service.Validator;
 import models.OperationInfo;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-//import org.apache.commons.logging.Log;
-//import org.apache.commons.logging.LogFactory;
 
 @Component
 public class OperationsService {
     private final OperationRepository operationRepository;
     private final RoleService roleService;
     private final Validator validator;
-    //final static Log LOGGER = LogFactory.getLog(OperationsService.class);
+    private static final Logger LOGGER = Logger.getLogger(OperationsService.class);
 
     @Autowired
     public OperationsService(RoleService roleService, OperationRepository operationRepository, Validator validator) {
@@ -42,6 +41,7 @@ public class OperationsService {
         Operation operation = searchOperation(nameOperation);
         operation.setOPER_NAME(newNameOperation);
         if(operationRepository.updateElement(operation) != 1) {
+            LOGGER.trace("OperationsService:updateOperation Операции не существует");
             throw new SSOException("Операции не существует");
         }
         return true;
@@ -50,6 +50,7 @@ public class OperationsService {
     public boolean deleteOperation(String nameOperation) throws SSOException {
         Operation operation = searchOperation(nameOperation);
         if(operationRepository.deleteElement(operation) != 1) {
+            LOGGER.trace("OperationsService:deleteOperation Операции не существует");
             throw new SSOException("Операциии не существует");
         }
         return true;
@@ -63,6 +64,7 @@ public class OperationsService {
 
         List<Operation> users = operationRepository.getElements(operation);
         if (users.size() != 1) {
+            LOGGER.trace("OperationsService:searchUser Операции не существует");
             throw new SSOException("Операции не существует");
         }
         return users.get(0);

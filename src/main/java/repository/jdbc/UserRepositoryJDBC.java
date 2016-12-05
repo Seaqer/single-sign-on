@@ -5,10 +5,9 @@ import core.domain.authorization.User;
 import exceptions.SSOException;
 import interfaces.repository.UserRepository;
 import models.UserInfo;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-//import org.apache.commons.logging.Log;
-//import org.apache.commons.logging.LogFactory;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -18,7 +17,7 @@ import java.util.Objects;
 @Component
 public class UserRepositoryJDBC implements UserRepository {
     private final Connection connection;
-    //final static Log LOGGER = LogFactory.getLog(UserRepositoryJDBC.class);
+    private static final Logger LOGGER = Logger.getLogger(UserRepositoryJDBC.class);
 
     @Autowired
     public UserRepositoryJDBC(Connection connection) {
@@ -40,17 +39,23 @@ public class UserRepositoryJDBC implements UserRepository {
                         element.setUSER_ID(id);
                         return element;
                     } else {
-                        //LOGGER.warn("Unable to get user id");
+                        LOGGER.trace("UserRepositoryJDBC:addElement не удалось получить id");
                         throw new SSOException("ошибка получения данных пользователя");
                     }
                 }
             } else {
-                //LOGGER.warn("User not created");
+                LOGGER.trace("UserRepositoryJDBC:addElement пользователь не создан");
                 throw new SSOException("пользователь не создан");
             }
         } catch (SQLException e) {
-            //LOGGER.debug("UserRepositoryJDBC:addElement",e);
-            throw e.getErrorCode() == 23505 ? new SSOException("логин уже существует", e) : new SSOException("ошибка сервиса регистрации", e);
+
+            if (e.getErrorCode() == 23505) {
+                LOGGER.trace("логин уже существует",e);
+                throw new SSOException("логин уже существует", e);
+            } else {
+                LOGGER.error("UserRepositoryJDBC:addElement", e);
+                throw new SSOException("ошибка сервиса регистрации", e);
+            }
         }
     }
 
@@ -72,7 +77,7 @@ public class UserRepositoryJDBC implements UserRepository {
 
             result = statement.executeUpdate();
         } catch (SQLException e) {
-            //LOGGER.debug("UserRepositoryJDBC:updateElement",e);
+            LOGGER.error("UserRepositoryJDBC:updateElement", e);
             throw new SSOException("ошибка сервиса регистрации", e);
         }
         return result;
@@ -86,7 +91,7 @@ public class UserRepositoryJDBC implements UserRepository {
             preparedStatement.setLong(1, element.getUSER_ID());
             result = preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            //LOGGER.debug("UserRepositoryJDBC:deleteElement",e);
+            LOGGER.error("UserRepositoryJDBC:deleteElement", e);
             throw new SSOException("ошибка сервиса регистрации", e);
         }
         return result;
@@ -110,7 +115,7 @@ public class UserRepositoryJDBC implements UserRepository {
                 users.add(user);
             }
         } catch (SQLException e) {
-            //LOGGER.debug("UserRepositoryJDBC:getElements",e);
+            LOGGER.error("UserRepositoryJDBC:getElements", e);
             users.clear();
             throw new SSOException("ошибка сервиса регистрации", e);
         }
@@ -135,7 +140,7 @@ public class UserRepositoryJDBC implements UserRepository {
             return resultSet.getInt("count_operation");
 
         } catch (SQLException e) {
-            //LOGGER.debug("UserRepositoryJDBC:checkOperation",e);
+            LOGGER.error("UserRepositoryJDBC:checkOperation", e);
             throw new SSOException("ошибка сервиса регистрации", e);
         }
     }
