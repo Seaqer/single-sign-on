@@ -29,8 +29,8 @@ public class UserRepositoryJDBC implements UserRepository {
         String query = "INSERT INTO USERS(USER_ID, LOGIN, PASS) VALUES(USER_SEQ.NEXTVAL, ? , ?)";
 
         try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, element.getLogin());
-            statement.setString(2, element.getPasswd());
+            statement.setString(1, element.getLOGIN());
+            statement.setString(2, element.getPASS());
 
             if (statement.executeUpdate() == 1) {
                 try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
@@ -65,8 +65,8 @@ public class UserRepositoryJDBC implements UserRepository {
         final String query = "UPDATE USERS SET LOGIN = ? , PASS = ? , DEL_USER = ? where USER_ID = ?;";
         long result = 0;
         try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, element.getLogin());
-            statement.setString(2, element.getPasswd());
+            statement.setString(1, element.getLOGIN());
+            statement.setString(2, element.getPASS());
             statement.setLong(4, element.getUSER_ID());
 
             if (Objects.isNull(element.getDEL_USER())) {
@@ -103,14 +103,14 @@ public class UserRepositoryJDBC implements UserRepository {
         final List<User> users = new ArrayList<>();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, element.getLogin());
+            statement.setString(1, element.getLOGIN());
             ResultSet resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
                 User user = new UserInfo();
                 user.setUSER_ID(resultSet.getInt("USER_ID"));
-                user.setLogin(resultSet.getString("LOGIN"));
-                user.setPasswd(resultSet.getString("PASS"));
+                user.setLOGIN(resultSet.getString("LOGIN"));
+                user.setPASS(resultSet.getString("PASS"));
                 user.setDEL_USER(resultSet.getLong("DEL_USER"));
                 users.add(user);
             }

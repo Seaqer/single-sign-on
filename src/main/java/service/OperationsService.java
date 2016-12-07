@@ -9,6 +9,7 @@ import models.OperationInfo;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -26,6 +27,7 @@ public class OperationsService {
         this.validator = validator;
     }
 
+    @Transactional(readOnly = true)
     public boolean createOperation(String nameOperation) throws SSOException {
         validator.validate(nameOperation);
 
@@ -35,6 +37,7 @@ public class OperationsService {
         return true;
     }
 
+    @Transactional(readOnly = true)
     public boolean updateOperation(String nameOperation, String newNameOperation) throws SSOException {
         validator.validate(newNameOperation);
 
@@ -47,6 +50,7 @@ public class OperationsService {
         return true;
     }
 
+    @Transactional(readOnly = true)
     public boolean deleteOperation(String nameOperation) throws SSOException {
         Operation operation = searchOperation(nameOperation);
         if(operationRepository.deleteElement(operation) != 1) {
@@ -56,6 +60,7 @@ public class OperationsService {
         return true;
     }
 
+    @Transactional(readOnly = true)
     public Operation searchOperation(String nameOperation) throws SSOException {
         validator.validate(nameOperation);
 
@@ -70,8 +75,10 @@ public class OperationsService {
         return users.get(0);
     }
 
+    @Transactional(readOnly = true)
     boolean giveRoleOperation(String nameOperation, String nameRole) throws SSOException {
         validator.validate(nameOperation);
+        validator.validate(nameRole);
 
         Role role = roleService.searchRole(nameRole);
         Operation operation = searchOperation(nameOperation);

@@ -10,6 +10,7 @@ import models.RoleInfo;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class RoleService {
         this.validator = validator;
     }
 
+    @Transactional(readOnly = true)
     public boolean createRole(String nameRole) throws SSOException {
         validator.validate(nameRole);
 
@@ -37,6 +39,7 @@ public class RoleService {
         return true;
     }
 
+    @Transactional(readOnly = true)
     public boolean updateRole(String nameRole, String newNameRole) throws SSOException {
         validator.validate(newNameRole);
 
@@ -49,6 +52,7 @@ public class RoleService {
         return true;
     }
 
+    @Transactional(readOnly = true)
     public boolean deleteRole(String nameRole) throws SSOException {
         Role role = searchRole(nameRole);
         if (roleRepository.deleteElement(role) != 1) {
@@ -58,6 +62,7 @@ public class RoleService {
         return true;
     }
 
+    @Transactional(readOnly = true)
     public Role searchRole(String nameRole) throws SSOException {
         validator.validate(nameRole);
 
@@ -72,6 +77,7 @@ public class RoleService {
         return users.get(0);
     }
 
+    @Transactional(readOnly = true)
     public boolean giveUserRole(String login, String nameRole) throws SSOException {
         User user = userService.searchUser(login);
         Role role = searchRole(nameRole);

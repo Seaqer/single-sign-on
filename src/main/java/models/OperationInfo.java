@@ -10,6 +10,11 @@ public class OperationInfo implements Operation {
     public OperationInfo() {
     }
 
+    public OperationInfo(long OPER_ID, String OPER_NAME) {
+        this.OPER_ID = OPER_ID;
+        this.OPER_NAME = OPER_NAME;
+    }
+
     public long getOPER_ID() {
         return OPER_ID;
     }
@@ -24,5 +29,12 @@ public class OperationInfo implements Operation {
 
     public void setOPER_NAME(String OPER_NAME) {
         this.OPER_NAME = OPER_NAME;
+    }
+
+    @Override
+    public String toString() {
+        return "OperationInfo{" +
+                "OPER_NAME='" + OPER_NAME + '\'' +
+                '}';
     }
 }

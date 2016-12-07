@@ -9,17 +9,19 @@ import interfaces.service.UserValidator;
 import models.UserInfo;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
 
-@Component
+@Service
 public class UserService {
     private final PasswordManager passwordManager;
     private final UserValidator userValidator;
     private final UserRepository userRepository;
     private static final Logger LOGGER = Logger.getLogger(UserService.class);
+
 
     @Autowired
     public UserService(PasswordManager passwordManager, UserValidator userValidator, UserRepository userRepository) {
@@ -28,19 +30,24 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
+    @Transactional(readOnly = true)
     public boolean registrationUser(String login, String password) throws SSOException {
         userValidator.validate(login, password);
 
         User user = new UserInfo();
-        user.setLogin(login);
-        user.setPasswd(passwordManager.getPassword(password));
+        user.setLOGIN(login);
+        user.setPASS(passwordManager.getPassword(password));
         userRepository.addElement(user);
         return true;
     }
 
+    @Transactional(readOnly = true)
     public boolean updateLogin(String login, String newLogin) throws SSOException {
+        userValidator.validateLogin(login);
+        userValidator.validateLogin(newLogin);
+
         User user = searchUser(login);
-        user.setLogin(newLogin);
+        user.setLOGIN(newLogin);
         if (userRepository.updateElement(user) != 1) {
             LOGGER.trace("UserService:updateLogin Пользователя не существует");
             throw new SSOException("Пользователя не существует");
@@ -48,11 +55,12 @@ public class UserService {
         return true;
     }
 
+    @Transactional(readOnly = true)
     public boolean updatePassword(String login, String newPassword) throws SSOException {
-        userValidator.validatePassword(newPassword);
+        userValidator.validate(login, newPassword);
 
         User user = searchUser(login);
-        user.setPasswd(passwordManager.getPassword(newPassword));
+        user.setPASS(passwordManager.getPassword(newPassword));
         if (userRepository.updateElement(user) != 1) {
             LOGGER.trace("UserService:closeUser Пользователя не существует");
             throw new SSOException("Пользователя не существует");
@@ -60,6 +68,7 @@ public class UserService {
         return true;
     }
 
+    @Transactional(readOnly = true)
     public boolean openUser(String login) throws SSOException {
         User user = searchUser(login);
         if (Objects.isNull(user.getDEL_USER())) {
@@ -76,13 +85,14 @@ public class UserService {
         return true;
     }
 
+    @Transactional(readOnly = true)
     public boolean closeUser(String login, String del_user_login) throws SSOException {
         User user = searchUser(login);
 
-        if (!Objects.isNull(user.getDEL_USER())){
+        if (!Objects.isNull(user.getDEL_USER())) {
             LOGGER.trace("UserService:closeUser Пользователя уже заблокирован");
             throw new SSOException("Пользователь уже заблокирован");
-        }else {
+        } else {
             User del_user = searchUser(del_user_login);
             user.setDEL_USER(del_user.getUSER_ID());
             if (userRepository.updateElement(user) != 1) {
@@ -92,12 +102,12 @@ public class UserService {
         }
         return true;
     }
-
+    @Transactional(readOnly = true)
     public User searchUser(String login) throws SSOException {
         userValidator.validateLogin(login);
 
         User user = new UserInfo();
-        user.setLogin(login);
+        user.setLOGIN(login);
 
         List<User> users = userRepository.getElements(user);
         if (users.size() != 1) {
@@ -107,6 +117,7 @@ public class UserService {
         return users.get(0);
     }
 
+    @Transactional(readOnly = true)
     public boolean hasPremission(User user, Operation operation) throws SSOException {
         switch (userRepository.checkOperation(user, operation)) {
             case 1:

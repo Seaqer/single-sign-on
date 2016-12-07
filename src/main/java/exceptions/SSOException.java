@@ -2,7 +2,7 @@ package exceptions;
 
 
 
-public class SSOException extends Exception {
+public class SSOException extends RuntimeException {
 
     public SSOException(String message) {
         super(message);
